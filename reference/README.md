@@ -1,0 +1,1 @@
+This Financial Sample file was downloaded from [https://docs.microsoft.com/en-us/power-bi/create-reports/sample-financial-download](https://docs.microsoft.com/en-us/power-bi/create-reports/sample-financial-download).
