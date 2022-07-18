@@ -73,7 +73,7 @@ resource StorageAcct 'Microsoft.Storage/storageAccounts@2021-09-01' = {
     supportsHttpsTrafficOnly: true
     minimumTlsVersion: 'TLS1_2'
     allowBlobPublicAccess: false
-    allowSharedKeyAccess: false
+    // allowSharedKeyAccess: false // this will disable SAS-Key auth
   }
   identity: {
     type: 'SystemAssigned'

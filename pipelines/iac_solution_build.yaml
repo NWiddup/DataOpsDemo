@@ -32,3 +32,21 @@ stages:
     parameters:
       t_p_filePathToFiles: '${{ variables.v_filePathToFiles }}'
       t_p_serviceConnection: '${{ variables.v_serviceConnectionName }}'
+  - stage: 'SolutionInfra_ExtraStep'
+    jobs: 
+      - job: 
+        displayName: 'Publish Financial Sample content'
+        continueOnError: 'false'
+        steps: 
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Financial Sample script'
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)\pipelines\scripts\copyFinancialSampleToStorage.ps1'
+              ArtifactName: 'scripts'
+              publishLocation: 'Container'
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Financial Sample xls file'
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)\reference\Financial Sample.xlsx'
+              ArtifactName: 'reference'
+              publishLocation: 'Container'

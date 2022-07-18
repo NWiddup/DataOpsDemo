@@ -51,5 +51,13 @@ stages:
                   csmFile: '$(Build.ArtifactStagingDirectory)\${{ parameters.t_p_templatesFolderName }}\solution_main.json'
                   overrideParameters: -environmentAliasPrefix "${{ parameters.t_p_environmentAliasPrefix }}" -environmentType "${{ parameters.t_p_environmentName }}" -primaryRegion "${{ parameters.t_p_primaryRegion }}" -sqlAdminUsername "${{ parameters.t_p_sqlAdminUsername }}" -azdoSpId "${{ parameters.t_p_azdoSpId }}"
                   deploymentMode: 'Incremental'
+              # push a copy of the Financial Sample.xlsx into the storage account for sample interaction(s)
+              - task: AzurePowerShell@5
+                inputs:
+                  azureSubscription: '${{ parameters.t_p_serviceConnection }}'
+                  ScriptType: 'FilePath'
+                  ScriptPath: '$(Agent.BuildDirectory)\${{ parameters.t_p_ciPipelineName }}\scripts\copyFinancialSampleToStorage.ps1'
+                  ScriptArguments: ' -environment "${{ parameters.t_p_environmentName }}" -sourceFilepath "$(Agent.BuildDirectory)\${{ parameters.t_p_ciPipelineName }}\reference\" -sourceFilename "Financial Sample.xlsx" -resourceGroupName "${{ parameters.t_p_environmentAliasPrefix }}-DemoEnv-${{ parameters.t_p_environmentName }}-spoke1" -destStorageAccountName "${{ parameters.t_p_environmentAliasPrefix }}storage${{ parameters.t_p_environmentName }}aue" -destContainerName "source"'
+                  azurePowerShellVersion: 'LatestVersion'
               # if you had more templates to deploy, they would go here.
               # you could also use multiple stages if you wanted to, as a logical boundary between deploying different resource types
