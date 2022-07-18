@@ -1,7 +1,8 @@
 # DataOpsDemo
 Demo for DataOps solutions with Bicep IAC + SSDT + ADF. Currently the solution is focussed on Bicep IAC, with SSDT + ADF to follow. This solution is based on my working experience with the technologies in customer deployments. FYI:
 
-* **This code is provide as is without warranty.**
+* **This code is provided as-is without warranty.**
+* I **DO NOT** recommended running this code in any production environment **without you having a full and proper understanding** of the **entire codebase**.
 * There are **multiple opportunities** for optimisation of this code, it is provided as an intro & sample **ONLY**.
 
 ## Refs
