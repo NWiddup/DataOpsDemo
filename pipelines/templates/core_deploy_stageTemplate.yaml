@@ -1,0 +1,53 @@
+parameters:
+  t_p_serviceConnection: ''
+  t_p_subscriptionId: ''
+  t_p_environmentName: ''
+  t_p_environmentAliasPrefix: ''
+  t_p_primaryRegion: ''
+  t_p_azdoSpid: ''
+  t_p_ciPipelineName: ''
+  t_p_templatesFolderName: ''
+
+stages:
+  - stage: 'Deploy_${{ parameters.t_p_environmentName }}_core_infrastructure'
+    # Run the stage if environment is 'Dev' or 'Test'
+    # For 'Prod' environment, only run if SourceBranch is 'main'
+    condition: and(succeeded(),or(eq('${{ parameters.t_p_environmentName }}','dev'),eq('${{ parameters.t_p_environmentName }}','test'),and(eq('${{ parameters.t_p_environmentName }}','prod'),eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
+    jobs: 
+    # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/deployment-jobs?view=azure-devops
+    # we use "deployment" instead of "job" because a deployment will download artifacts from the build job (like a CD/Release task), but a "job" wont do this (as it is essentially a CI/Build task)
+    # if you don't use a "deployment" then you will need an additional task in the steps below, to DownloadBuildArtifacts@0 from the CI Pipeline
+    # for a consolidated Build + Release pipeline, you can use the "buildType: 'current'" property, to access the built files from the commit which triggered the execution of the pipeline
+    - deployment: '${{ parameters.t_p_environmentName }}_core_deployment'
+      pool:
+        vmImage: 'windows-latest'
+      variables:
+        s_v_environment_name: '${{ parameters.t_p_environmentName }}'
+      environment: 'nwdemo-DataOps-${{ parameters.t_p_environmentName }}' # for a parent template, you need to specifically name the environment, otherwise the environment will be dynamically generated as "$(environment_name)" in the Pipelines > Environments. However for a child template, you can parameterise this.
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              # As we are using a "resources:" reference (which represents the CI Pipeline) and a "deployment:" activity type, AzDO automatically downloads the pipeline output artifacts.
+              # So this task only needs to copy them into the $(Build.ArtifactStagingDirectory) from thier default download location.
+              - task: CopyFiles@2
+                displayName: 'Copy ARM Template files to Staging directory'
+                inputs:
+                  SourceFolder: '$(Agent.BuildDirectory)\${{ parameters.t_p_ciPipelineName }}\${{ parameters.t_p_templatesFolderName }}'
+                  Contents: '*.json'
+                  TargetFolder: '$(Build.ArtifactStagingDirectory)\${{ parameters.t_p_templatesFolderName }}'
+              - task: AzureResourceManagerTemplateDeployment@3
+                inputs:
+                  deploymentScope: 'Subscription'
+                  azureResourceManagerConnection: '${{ parameters.t_p_serviceConnection }}'
+                  subscriptionId: '${{ parameters.t_p_subscriptionId }}'
+                  location: '${{ parameters.t_p_primaryRegion }}'
+                  templateLocation: 'Linked artifact'
+                  # these next 2 lines need to be updated based on your template file name, and template file parameters
+                  csmFile: '$(Build.ArtifactStagingDirectory)\${{ parameters.t_p_templatesFolderName }}\iac_subscription_main.json'
+                  overrideParameters: -environmentAliasPrefix "${{ parameters.t_p_environmentAliasPrefix }}" -environmentType "${{ parameters.t_p_environmentName }}" -primaryRegion "${{ parameters.t_p_primaryRegion }}" -azdoSpId "${{ parameters.t_p_azdoSpid }}"
+                  deploymentMode: 'Incremental'
+              # if you had more templates to deploy, they would go here. eg.:
+                # deploy extra Resource Group level object(s) for the 'hub'
+                # deploy extra Resource Group level object(s) for the 'spoke'
+              # you could also use multiple stages if you wanted to, as a logical boundary between deploying different resource types

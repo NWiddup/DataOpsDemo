@@ -1,0 +1,6 @@
+# This will be a scheduled pipeline which calls the other pipeline. It will run the IAC schema definition components, but not the data definition components (eg. dacpacs)
+
+# call the main pipeline with an "IsScheduledRun" parameter.
+# add a condition to the main pipeline which takes the "IsScheduledRun" parameter and conditionally runs the IAC components only
+
+# for a working example of this, see https://github.com/NWiddup/RecursivePipelineDemo, looking at how the scheduled-template.yml calls the parent-template.yml with a set of version controlled parameters - effectively building the environment with a set of known good configurations/commits/tagged builds.

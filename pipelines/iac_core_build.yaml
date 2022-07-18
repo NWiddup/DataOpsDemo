@@ -1,0 +1,34 @@
+# For your production deployments, you probably want to run CI on ALL branches.
+# You may have separate CI (lighter-weight) processes for your Dev/* builds...
+# change
+trigger:
+  branches:
+    include:
+      - main
+      - dev*
+  batch: true
+  # including the path filter for future use.
+  paths:
+    include:
+      - source/CoreInfrastructure
+      - pipelines/iac_core_build.yaml
+      - pipelines/iac_core_deploy.yaml
+      - pipelines/templates/iac_build_stageTemplate.yaml
+      - pipelines/templates/core_deploy_stageTemplate.yaml
+    exclude:
+      - source/CoreInfrastructure/readme.md
+
+variables:
+- name: v_filePathToFiles
+  value: '$(Build.SourcesDirectory)\source\CoreInfrastructure\'
+- name: v_serviceConnectionName
+  value: 'DataOpsAzSvcEndpoint'
+
+pool:
+  vmImage: 'windows-latest'
+
+stages:
+  - template: templates/iac_build_stageTemplate.yaml
+    parameters:
+      t_p_filePathToFiles: '${{ variables.v_filePathToFiles }}'
+      t_p_serviceConnection: '${{ variables.v_serviceConnectionName }}'

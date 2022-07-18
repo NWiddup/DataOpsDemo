@@ -1,0 +1,56 @@
+parameters:
+  t_p_filePathToFiles: ''
+  t_p_serviceConnection: ''
+
+stages:
+  - stage: 'BuildAndLint_BicepFiles'
+    jobs: 
+      - job: 
+        displayName: 'BuildAndLint_BicepFiles'
+        continueOnError: 'false'
+        workspace:
+          clean: all # what to clean up before the job runs
+        steps: 
+          - task: PowerShell@2
+            displayName: 'Clone and Install ARMTTK'
+            inputs:
+              filePath: '.\pipelines\scripts\install_ARMTTK.ps1'
+              arguments: '-installPath "$(Build.BinariesDirectory)"'
+          # - task: AzureCLI@2
+          #   displayName: 'List Files to build'
+          #   inputs:
+          #     azureSubscription: '${{ parameters.t_p_serviceConnection }}'
+          #     scriptType: 'pscore'
+          #     scriptLocation: 'inlineScript'
+          #     inlineScript: 'Get-ChildItem -Path "${{ parameters.t_p_filePathToFiles }}" -Filter *.bicep'
+          - task: AzureCLI@2
+            displayName: 'Build the ARM Template from the BICEP file'
+            inputs:
+              azureSubscription: '${{ parameters.t_p_serviceConnection }}'
+              scriptType: 'pscore'
+              scriptLocation: 'inlineScript'
+              inlineScript: 'Get-ChildItem -Path "${{ parameters.t_p_filePathToFiles }}" -Filter *.bicep | foreach { az bicep build --file $_.FullName }'
+          - task: CopyFiles@2
+            displayName: 'Copy ARM Template files to Staging directory'
+            inputs:
+              SourceFolder: '${{ parameters.t_p_filePathToFiles }}'
+              Contents: '*.json'
+              TargetFolder: '$(Build.ArtifactStagingDirectory)\templates'
+          - task: PowerShell@2
+            displayName: 'Linting - ARM-TTK Validate ARM templates adhere to best practice'
+            inputs:
+              filePath: '.\pipelines\linting\ARM-TTK_linting.ps1'
+              arguments: '-ARMTTKModuleDirectory "$(Build.BinariesDirectory)\arm-ttk-latest" -ARMTTKResultsDirectory "$(Build.ArtifactStagingDirectory)" -TemplatesToScanDirectory "$(Build.ArtifactStagingDirectory)\templates"'
+              errorActionPreference: 'silentlyContinue'
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish ARM Templates'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)\templates'
+              ArtifactName: 'templates'
+              publishLocation: 'Container'
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish ARM-TTK scan results'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)\arm-ttk-results'
+              ArtifactName: 'arm-ttk-results'
+              publishLocation: 'Container'

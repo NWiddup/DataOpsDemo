@@ -1,0 +1,85 @@
+trigger: none
+
+pr: none
+
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/process/pipeline-triggers?view=azure-devops&tabs=yaml
+resources:
+  pipelines:
+    - pipeline: iacCoreCi
+      project: DataOps
+      source: Build-IAC-CoreInfrastructure
+      trigger:
+        enabled: true
+        branches:
+          include:
+            - /*
+
+parameters:
+  - name: p_environmentAliasPrefix
+    type: string
+    displayName: environmentAliasPrefix
+    default: 'nwDataOps'
+  - name: p_primaryRegion
+    type: string
+    displayName: primaryRegion
+    default: 'Australia East'
+    values:
+      - 'Australia East'
+      - 'Australia SouthEast'
+
+variables:
+- name: v_serviceConnectionName
+  value: 'DataOpsAzSvcEndpoint'
+- name: v_subscriptionId
+  value: '0a0a0a0a-0a0a-0a0a-0a0a-0a0a0a0a0a0a'
+- name: v_azdoSpid
+  value: '0a0a0a0a-0a0a-0a0a-0a0a-0a0a0a0a0a0a'
+# if you have multiple service principals for different subscriptions/tenants, consider using a filtered variable like below, or just declare multiple variables
+# - name: v_azdoSpid
+#   ${{ if eq(parameters.environment, 'DEV') }}:
+#     value: '0a0a0a0a-0a0a-0a0a-0a0a-0a0a0a0a0a0a'
+#   ${{ if eq(parameters.environment, 'TEST') }}:
+#     value: '0a0a0a0a-0a0a-0a0a-0a0a-0a0a0a0a0a0a'
+#   ${{ if eq(parameters.environment, 'PROD') }}:
+#     value: '0a0a0a0a-0a0a-0a0a-0a0a-0a0a0a0a0a0a'
+- name: v_ciPipelineName
+  value: 'iacCoreCi'
+- name: v_templatesFolderName
+  value: 'templates'
+
+pool:
+  vmImage: 'windows-latest'
+
+stages:
+  # deploy transpiled files (each stage deploys both the Subscription template and the RG template)
+  - template: templates/core_deploy_stageTemplate.yaml
+    parameters:
+      t_p_environmentName: 'dev'
+      t_p_environmentAliasPrefix: '${{ parameters.p_environmentAliasPrefix }}'
+      t_p_primaryRegion: '${{ parameters.p_primaryRegion }}'
+      t_p_serviceConnection: '${{ variables.v_serviceConnectionName }}'
+      t_p_subscriptionId: '${{ variables.v_subscriptionId }}'
+      t_p_azdoSpid: '${{ variables.v_azdoSpid }}'
+      t_p_ciPipelineName: '${{ variables.v_ciPipelineName }}'
+      t_p_templatesFolderName: '${{ variables.v_templatesFolderName }}'
+  - template: templates/core_deploy_stageTemplate.yaml
+    parameters:
+      t_p_environmentName: 'test'
+      t_p_environmentAliasPrefix: '${{ parameters.p_environmentAliasPrefix }}'
+      t_p_primaryRegion: '${{ parameters.p_primaryRegion }}'
+      t_p_serviceConnection: '${{ variables.v_serviceConnectionName }}'
+      t_p_subscriptionId: '${{ variables.v_subscriptionId }}'
+      t_p_azdoSpid: '${{ variables.v_azdoSpid }}'
+      t_p_ciPipelineName: '${{ variables.v_ciPipelineName }}'
+      t_p_templatesFolderName: '${{ variables.v_templatesFolderName }}'
+  # Due to conditions in the template, Prod will only run if the triggering branch is 'main'
+  - template: templates/core_deploy_stageTemplate.yaml
+    parameters:
+      t_p_environmentName: 'prod'
+      t_p_environmentAliasPrefix: '${{ parameters.p_environmentAliasPrefix }}'
+      t_p_primaryRegion: '${{ parameters.p_primaryRegion }}'
+      t_p_serviceConnection: '${{ variables.v_serviceConnectionName }}'
+      t_p_subscriptionId: '${{ variables.v_subscriptionId }}'
+      t_p_azdoSpid: '${{ variables.v_azdoSpid }}'
+      t_p_ciPipelineName: '${{ variables.v_ciPipelineName }}'
+      t_p_templatesFolderName: '${{ variables.v_templatesFolderName }}'
