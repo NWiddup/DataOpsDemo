@@ -7,6 +7,7 @@ parameters:
   t_p_azdoSpid: ''
   t_p_ciPipelineName: ''
   t_p_templatesFolderName: ''
+  t_p_templateFileName: ''
 
 stages:
   - stage: 'Deploy_${{ parameters.t_p_environmentName }}_core_infrastructure'
@@ -44,7 +45,7 @@ stages:
                   location: '${{ parameters.t_p_primaryRegion }}'
                   templateLocation: 'Linked artifact'
                   # these next 2 lines need to be updated based on your template file name, and template file parameters
-                  csmFile: '$(Build.ArtifactStagingDirectory)\${{ parameters.t_p_templatesFolderName }}\iac_subscription_main.json'
+                  csmFile: '$(Build.ArtifactStagingDirectory)\${{ parameters.t_p_templatesFolderName }}\${{ parameters.t_p_templateFileName }}'
                   overrideParameters: -environmentAliasPrefix "${{ parameters.t_p_environmentAliasPrefix }}" -environmentType "${{ parameters.t_p_environmentName }}" -primaryRegion "${{ parameters.t_p_primaryRegion }}" -azdoSpId "${{ parameters.t_p_azdoSpid }}"
                   deploymentMode: 'Incremental'
               # if you had more templates to deploy, they would go here. eg.:

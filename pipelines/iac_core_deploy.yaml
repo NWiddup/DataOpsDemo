@@ -62,6 +62,7 @@ stages:
       t_p_azdoSpid: '${{ variables.v_azdoSpid }}'
       t_p_ciPipelineName: '${{ variables.v_ciPipelineName }}'
       t_p_templatesFolderName: '${{ variables.v_templatesFolderName }}'
+      t_p_templateFileName: 'iac_subscription_main.json'
   - template: templates/core_deploy_stageTemplate.yaml
     parameters:
       t_p_environmentName: 'test'
@@ -72,6 +73,7 @@ stages:
       t_p_azdoSpid: '${{ variables.v_azdoSpid }}'
       t_p_ciPipelineName: '${{ variables.v_ciPipelineName }}'
       t_p_templatesFolderName: '${{ variables.v_templatesFolderName }}'
+      t_p_templateFileName: 'iac_subscription_main.json'
   # Due to conditions in the template, Prod will only run if the triggering branch is 'main'
   - template: templates/core_deploy_stageTemplate.yaml
     parameters:
@@ -83,3 +85,4 @@ stages:
       t_p_azdoSpid: '${{ variables.v_azdoSpid }}'
       t_p_ciPipelineName: '${{ variables.v_ciPipelineName }}'
       t_p_templatesFolderName: '${{ variables.v_templatesFolderName }}'
+      t_p_templateFileName: 'iac_subscription_main.json'

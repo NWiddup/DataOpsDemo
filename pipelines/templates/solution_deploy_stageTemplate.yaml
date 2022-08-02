@@ -8,6 +8,7 @@ parameters:
   t_p_azdoSpId: ''
   t_p_ciPipelineName: ''
   t_p_templatesFolderName: ''
+  t_p_templateFileName: ''
 
 stages:
   - stage: 'Deploy_${{ parameters.t_p_environmentName }}_solution_infrastructure'
@@ -48,7 +49,7 @@ stages:
                   location: '${{ parameters.t_p_primaryRegion }}'
                   templateLocation: 'Linked artifact'
                   # these next 2 lines need to be updated based on your template file name, and template file parameters
-                  csmFile: '$(Build.ArtifactStagingDirectory)\${{ parameters.t_p_templatesFolderName }}\solution_main.json'
+                  csmFile: '$(Build.ArtifactStagingDirectory)\${{ parameters.t_p_templatesFolderName }}\${{ parameters.t_p_templateFileName }}'
                   overrideParameters: -environmentAliasPrefix "${{ parameters.t_p_environmentAliasPrefix }}" -environmentType "${{ parameters.t_p_environmentName }}" -primaryRegion "${{ parameters.t_p_primaryRegion }}" -sqlAdminUsername "${{ parameters.t_p_sqlAdminUsername }}" -azdoSpId "${{ parameters.t_p_azdoSpId }}"
                   deploymentMode: 'Incremental'
               # push a copy of the Financial Sample.xlsx into the storage account for sample interaction(s)
